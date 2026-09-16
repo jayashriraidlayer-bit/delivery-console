@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Delivery Zone Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.5/ol.js"></script>
+<style>
+  .ol-box{box-sizing:border-box;border-radius:2px;border:2px solid #00f}.ol-mouse-position{top:8px;right:8px;position:absolute}.ol-scale-line{background:rgba(0,60,136,.3);border-radius:4px;bottom:8px;left:8px;padding:2px;position:absolute}.ol-scale-line-inner{border:1px solid #eee;border-top:none;color:#eee;font-size:10px;text-align:center;margin:1px;will-change:contents,width}.ol-overlay-container{will-change:left,right,top,bottom}.ol-unsupported{display:none}.ol-unselectable,.ol-viewport{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}.ol-selectable{-webkit-touch-callout:default;-webkit-user-select:auto;-moz-user-select:auto;-ms-user-select:auto;user-select:auto}.ol-grabbing{cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.ol-grab{cursor:move;cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.ol-control{position:absolute;background-color:rgba(255,255,255,.4);border-radius:4px;padding:2px}.ol-control:hover{background-color:rgba(255,255,255,.6)}.ol-zoom{top:.5em;left:.5em}.ol-rotate{top:.5em;right:.5em;transition:opacity .25s linear,visibility 0s linear}.ol-rotate.ol-hidden{opacity:0;visibility:hidden;transition:opacity .25s linear,visibility 0s linear .25s}.ol-zoom-extent{top:4.643em;left:.5em}.ol-full-screen{right:.5em;top:.5em}@media print{.ol-control{display:none}}.ol-control button{display:block;margin:1px;padding:0;color:#fff;font-size:1.14em;font-weight:700;text-decoration:none;text-align:center;height:1.375em;width:1.375em;line-height:.4em;background-color:rgba(0,60,136,.5);border:none;border-radius:2px}.ol-control button::-moz-focus-inner{border:none;padding:0}.ol-zoom-extent button{line-height:1.4em}.ol-compass{display:block;font-weight:400;font-size:1.2em;will-change:transform}.ol-touch .ol-control button{font-size:1.5em}.ol-touch .ol-zoom-extent{top:5.5em}.ol-control button:focus,.ol-control button:hover{text-decoration:none;background-color:rgba(0,60,136,.7)}.ol-zoom .ol-zoom-in{border-radius:2px 2px 0 0}.ol-zoom .ol-zoom-out{border-radius:0 0 2px 2px}.ol-attribution{text-align:right;bottom:.5em;right:.5em;max-width:calc(100% - 1.3em)}.ol-attribution ul{margin:0;padding:0 .5em;font-size:.7rem;line-height:1.375em;color:#000;text-shadow:0 0 2px #fff}.ol-attribution li{display:inline;list-style:none;line-height:inherit}.ol-attribution li:not(:last-child):after{content:" "}.ol-attribution img{max-height:2em;max-width:inherit;vertical-align:middle}.ol-attribution button,.ol-attribution ul{display:inline-block}.ol-attribution.ol-collapsed ul{display:none}.ol-attribution.ol-logo-only ul{display:block}.ol-attribution:not(.ol-collapsed){background:rgba(255,255,255,.8)}.ol-attribution.ol-uncollapsible{bottom:0;right:0;border-radius:4px 0 0;height:1.1em;line-height:1em}.ol-attribution.ol-logo-only{background:0 0;bottom:.4em;height:1.1em;line-height:1em}.ol-attribution.ol-uncollapsible img{margin-top:-.2em;max-height:1.6em}.ol-attribution.ol-logo-only button,.ol-attribution.ol-uncollapsible button{display:none}.ol-zoomslider{top:4.5em;left:.5em;height:200px}.ol-zoomslider button{position:relative;height:10px}.ol-touch .ol-zoomslider{top:5.5em}.ol-overviewmap{left:.5em;bottom:.5em}.ol-overviewmap.ol-uncollapsible{bottom:0;left:0;border-radius:0 4px 0 0}.ol-overviewmap .ol-overviewmap-map,.ol-overviewmap button{display:inline-block}.ol-overviewmap .ol-overviewmap-map{border:1px solid #7b98bc;height:150px;margin:2px;width:150px}.ol-overviewmap:not(.ol-collapsed) button{bottom:1px;left:2px;position:absolute}.ol-overviewmap.ol-collapsed .ol-overviewmap-map,.ol-overviewmap.ol-uncollapsible button{display:none}.ol-overviewmap:not(.ol-collapsed){background:rgba(255,255,255,.8)}.ol-overviewmap-box{border:2px dotted rgba(0,60,136,.7)}.ol-overviewmap .ol-overviewmap-box:hover{cursor:move}
+
+  :root {
+    --paper: #f7f8f6;
+    --ink: #17211f;
+    --ink-soft: #4a5551;
+    --line: rgba(23, 33, 31, 0.12);
+    --panel: #ffffff;
+    --accent: #2e6f5e;
+    --accent-soft: #dcebe5;
+    --ok: #3f8f5c;
+    --warn: #c97a2b;
+    --alert: #b84a3e;
+    --map-bg: #e7ebe6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12181a;
+      --ink: #eef2f0;
+      --ink-soft: #a4b0ac;
+      --line: rgba(238, 242, 240, 0.12);
+      --panel: #182120;
+      --accent: #57b596;
+      --accent-soft: rgba(87, 181, 150, 0.16);
+      --ok: #57b596;
+      --warn: #e0a058;
+      --alert: #e0776a;
+      --map-bg: #0e1513;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12181a;
+    --ink: #eef2f0;
+    --ink-soft: #a4b0ac;
+    --line: rgba(238, 242, 240, 0.12);
+    --panel: #182120;
+    --accent: #57b596;
+    --accent-soft: rgba(87, 181, 150, 0.16);
+    --ok: #57b596;
+    --warn: #e0a058;
+    --alert: #e0776a;
+    --map-bg: #0e1513;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Sora", system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+  /* Top bar */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-mark svg { width: 16px; height: 16px; }
+  .brand-name {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: 0.02em;
+  }
+  .live-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 8px;
+    border-radius: 100px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 0 var(--ok);
+    animation: pulse 2s infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); }
+    70% { box-shadow: 0 0 0 6px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* Layout */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+  aside {
+    width: 320px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  main {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+    background: var(--map-bg);
+  }
+  #map { position: absolute; inset: 0; }
+
+  .panel-section {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+
+  /* Stat tiles */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-tile {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .stat-value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  /* Zone list */
+  .zone-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .zone-row:hover { background: var(--accent-soft); }
+  .zone-row:last-child { border-bottom: none; }
+  .zone-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .zone-info { flex: 1; min-width: 0; }
+  .zone-name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .zone-meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: "JetBrains Mono", monospace;
+  }
+  .zone-count {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+
+  .add-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: "Sora", sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .add-btn:hover { text-decoration: underline; }
+  .empty-hint {
+    padding: 16px 18px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .draw-banner {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: white;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 100px;
+    z-index: 6;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+  .draw-banner.show { display: flex; }
+  .draw-banner button {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    font-family: "Sora", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: center; justify-content: center; z-index: 20;
+    padding: 16px;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal-card {
+    background: var(--panel); border-radius: 14px; padding: 22px;
+    width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .modal-card h3 { margin: 0; font-size: 16px; }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; }
+  .modal-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); font-weight: 600; }
+  .modal-field input, .modal-field select {
+    font: inherit; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink); font-size: 13.5px;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .modal-actions button {
+    font: inherit; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: 8px;
+    border: 1px solid var(--line); cursor: pointer; background: var(--paper); color: var(--ink);
+  }
+  .modal-actions button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .modal-error { font-size: 12px; color: var(--alert); display: none; }
+  .modal-error.show { display: block; }
+
+  /* Driver list */
+  .driver-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+  }
+  .driver-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .driver-dot.ok { background: var(--ok); }
+  .driver-dot.warn { background: var(--warn); }
+  .driver-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    flex: 1;
+  }
+  .driver-eta {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  /* Map overlay controls */
+  .ol-zoom {
+    top: auto !important;
+    left: auto !important;
+    bottom: 14px;
+    right: 14px;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ol-zoom button {
+    width: 34px;
+    height: 34px;
+    line-height: 1;
+    font-size: 18px;
+    font-family: "Sora", sans-serif;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .ol-zoom button:hover, .ol-zoom button:focus {
+    background: var(--accent-soft);
+  }
+  .ol-attribution {
+    font-size: 10px;
+  }
+  .map-toolbar {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+  }
+  .map-btn {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: "Sora", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .map-btn:hover { background: var(--accent-soft); }
+  .map-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .map-btn:focus-visible, .zone-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .map-legend {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .legend-row { display: flex; align-items: center; gap: 7px; color: var(--ink-soft); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  .ol-popup {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 180px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    font-size: 12.5px;
+    transform: translate(-50%, calc(-100% - 14px));
+    pointer-events: none;
+  }
+  .ol-popup .pop-title { font-weight: 700; margin-bottom: 3px; }
+  .ol-popup .pop-line { color: var(--ink-soft); font-family: "JetBrains Mono", monospace; font-size: 11px; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  @media (max-width: 720px) {
+    .layout { flex-direction: column; }
+    aside { width: 100%; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--line); }
+    main { min-height: 40vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 12L11 4L21 8V16L11 20L3 12Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+        <circle cx="11" cy="12" r="2" fill="white"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Palit Zone Console</div>
+      <div class="brand-sub">Bacoor &middot; Delivery Ops</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="live-pill"><span class="live-dot"></span>7 drivers on route</div>
+    <button id="logoutBtn" style="background:var(--panel); border:1px solid var(--line); color:var(--ink-soft); font-family:'Sora',sans-serif; font-size:12px; font-weight:600; padding:7px 12px; border-radius:100px; cursor:pointer;">Sign out</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="panel-section">
+      <p class="panel-title">Today</p>
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <div class="stat-value">142</div>
+          <div class="stat-label">Deliveries done</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value">18<span style="font-size:13px;color:var(--ink-soft);">min</span></div>
+          <div class="stat-label">Avg. time in zone</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value">4</div>
+          <div class="stat-label">Zones covered</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value" style="color:var(--warn);">2</div>
+          <div class="stat-label">Delayed stops</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section" style="padding-bottom:0; display:flex; align-items:center; justify-content:space-between;">
+      <p class="panel-title" style="margin:0;">Delivery zones</p>
+      <button class="add-btn" id="btnDrawZone">+ Draw zone</button>
+    </div>
+    <div id="zoneList"><div class="empty-hint">Loading…</div></div>
+
+    <div class="panel-section" style="padding-bottom:0; margin-top:4px; display:flex; align-items:center; justify-content:space-between;">
+      <p class="panel-title" style="margin:0;">Drivers en route</p>
+      <button class="add-btn" id="btnAddDriver">+ Add driver</button>
+    </div>
+    <div id="driverList" style="padding-bottom:12px;"><div class="empty-hint">Loading…</div></div>
+  </aside>
+
+  <main>
+    <div id="map"></div>
+    <div class="map-toolbar">
+      <button class="map-btn active" id="btnZones">Zones</button>
+      <button class="map-btn" id="btnDrivers">Drivers</button>
+      <button class="map-btn" id="btnStops">Stops</button>
+      <button class="map-btn" id="btnAddStop" style="margin-left:6px;">+ Add stop</button>
+    </div>
+    <div class="map-legend">
+      <div class="legend-row"><span class="legend-swatch" style="background:#2e6f5e;"></span>Zone boundary</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--ok); border-radius:50%; width:8px; height:8px;"></span>Driver, on time</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--warn); border-radius:50%; width:8px; height:8px;"></span>Driver, delayed</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#c97a2b;"></span>Stop: pending</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#3f8f5c;"></span>Stop: delivered</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#b84a3e;"></span>Stop: failed</div>
+    </div>
+    <div class="draw-banner" id="drawBanner">
+      <span id="drawBannerText">Click the map to place points &middot; 0 placed</span>
+      <button id="drawFinishBtn">Finish (min 3)</button>
+      <button id="drawCancelBtn">Cancel</button>
+    </div>
+    <div class="draw-banner" id="stopPlaceBanner">
+      <span>Click the map to place the new stop</span>
+      <button id="stopPlaceCancelBtn">Cancel</button>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="zoneDetailsModal">
+  <div class="modal-card">
+    <h3>Name this zone</h3>
+    <div class="modal-field">
+      <label for="zoneNameInput">Zone name</label>
+      <input type="text" id="zoneNameInput" placeholder="e.g. Aguinaldo Corridor" />
+    </div>
+    <div class="modal-field">
+      <label for="zoneScheduleInput">Schedule</label>
+      <input type="text" id="zoneScheduleInput" placeholder="e.g. Daily, Tue-Sun, Sat-Sun only" />
+    </div>
+    <div class="modal-field">
+      <label for="zoneColorInput">Color</label>
+      <select id="zoneColorInput">
+        <option value="#2e6f5e">Green</option>
+        <option value="#c97a2b">Orange</option>
+        <option value="#6b8f9c">Blue-grey</option>
+        <option value="#8a5fb0">Purple</option>
+        <option value="#b84a3e">Red</option>
+      </select>
+    </div>
+    <div class="modal-error" id="zoneModalError"></div>
+    <div class="modal-actions">
+      <button id="zoneModalCancel">Cancel</button>
+      <button class="primary" id="zoneModalSave">Save zone</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="driverModal">
+  <div class="modal-card">
+    <h3>Add a driver</h3>
+    <div class="modal-field">
+      <label for="driverNameInput">Driver name</label>
+      <input type="text" id="driverNameInput" placeholder="e.g. P. Villanueva" />
+    </div>
+    <div class="modal-field">
+      <label for="driverZoneInput">Starting zone</label>
+      <select id="driverZoneInput"></select>
+    </div>
+    <div class="modal-error" id="driverModalError"></div>
+    <div class="modal-actions">
+      <button id="driverModalCancel">Cancel</button>
+      <button class="primary" id="driverModalSave">Add driver</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="stopModal">
+  <div class="modal-card">
+    <h3>Name this stop</h3>
+    <div class="modal-field">
+      <label for="stopLabelInput">Stop label</label>
+      <input type="text" id="stopLabelInput" placeholder="e.g. Dela Cruz Residence" />
+    </div>
+    <div class="modal-field">
+      <label for="stopZoneInput">Zone</label>
+      <select id="stopZoneInput"></select>
+    </div>
+    <div class="modal-error" id="stopModalError"></div>
+    <div class="modal-actions">
+      <button id="stopModalCancel">Cancel</button>
+      <button class="primary" id="stopModalSave">Save stop</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="stopStatusModal">
+  <div class="modal-card">
+    <h3 id="stopStatusModalTitle">Update stop status</h3>
+    <div class="modal-field">
+      <label for="stopStatusInput">Status</label>
+      <select id="stopStatusInput">
+        <option value="pending">Pending</option>
+        <option value="delivered">Delivered</option>
+        <option value="failed">Failed</option>
+      </select>
+    </div>
+    <div class="modal-error" id="stopStatusModalError"></div>
+    <div class="modal-actions">
+      <button id="stopStatusModalCancel">Cancel</button>
+      <button class="primary" id="stopStatusModalSave">Update</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---- Reference point: Bacoor City, Cavite, PH ----
+  var center = ol.proj.fromLonLat([120.9420, 14.4590]);
+  var API_BASE = "api/";
+
+  // ---- Require a signed-in session before showing any company data ----
+  fetch(API_BASE + "me.php").then(function (r) { return r.json(); }).then(function (me) {
+    if (!me.authenticated) window.location.href = "login.html";
+  }).catch(function () { window.location.href = "login.html"; });
+
+  document.getElementById("logoutBtn").addEventListener("click", function () {
+    fetch(API_BASE + "logout.php", { method: "POST" }).finally(function () {
+      window.location.href = "login.html";
+    });
+  });
+
+  // ---- Fallback demo data (used only if the PHP/PostGIS API is unreachable) ----
+  var fallbackZones = [
+    { name: "Molino Core", color: "#2e6f5e", count: 38, coords: [
+      [120.9330,14.4650],[120.9420,14.4680],[120.9480,14.4620],[120.9440,14.4560],[120.9350,14.4580],[120.9330,14.4650]
+    ]},
+    { name: "Niog – Talaba", color: "#3f8f5c", count: 51, coords: [
+      [120.9440,14.4560],[120.9480,14.4620],[120.9560,14.4600],[120.9580,14.4500],[120.9480,14.4470],[120.9440,14.4560]
+    ]},
+    { name: "Zapote Edge", color: "#c97a2b", count: 29, coords: [
+      [120.9560,14.4600],[120.9640,14.4650],[120.9680,14.4580],[120.9600,14.4530],[120.9560,14.4600]
+    ]},
+    { name: "Salinas Ext.", color: "#6b8f9c", count: 24, coords: [
+      [120.9330,14.4650],[120.9350,14.4580],[120.9280,14.4540],[120.9230,14.4610],[120.9280,14.4670],[120.9330,14.4650]
+    ]}
+  ];
+  var fallbackDrivers = [
+    { name: "R. Manalo", status: "ok", lon: 120.9390, lat: 14.4610, zone: "Molino Core" },
+    { name: "J. Dizon", status: "ok", lon: 120.9500, lat: 14.4550, zone: "Niog – Talaba" },
+    { name: "C. Reyes", status: "warn", lon: 120.9610, lat: 14.4600, zone: "Zapote Edge" },
+    { name: "M. Santos", status: "ok", lon: 120.9530, lat: 14.4520, zone: "Niog – Talaba" },
+    { name: "A. Cruz", status: "ok", lon: 120.9290, lat: 14.4600, zone: "Salinas Ext." },
+    { name: "L. Bautista", status: "ok", lon: 120.9450, lat: 14.4630, zone: "Molino Core" },
+    { name: "E. Torres", status: "warn", lon: 120.9645, lat: 14.4610, zone: "Zapote Edge" }
+  ];
+  var fallbackStops = [
+    { label: "Aling Rosa Sari-Sari", lon: 120.9400, lat: 14.4600 },
+    { label: "Villa Esperanza Compound", lon: 120.9500, lat: 14.4560 },
+    { label: "Zapote Public Market", lon: 120.9615, lat: 14.4590 },
+    { label: "Salinas II Barangay Hall", lon: 120.9300, lat: 14.4595 },
+    { label: "Molino Blvd. Apartments", lon: 120.9410, lat: 14.4645 }
+  ];
+
+  function toColorRgba(hex, alpha) {
+    var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+  }
+
+  var geojsonFmt = new ol.format.GeoJSON({
+    featureProjection: "EPSG:3857",
+    dataProjection: "EPSG:4326"
+  });
+
+  var dataSourceBadge = document.createElement("div");
+  dataSourceBadge.className = "map-btn";
+  dataSourceBadge.style.cssText = "position:absolute;top:14px;right:14px;z-index:5;pointer-events:none;";
+  document.querySelector("main").appendChild(dataSourceBadge);
+  function setDataSource(live) {
+    dataSourceBadge.textContent = live ? "● Live PostGIS data" : "○ Demo data (API offline)";
+    dataSourceBadge.style.color = live ? "var(--ok)" : "var(--ink-soft)";
+  }
+
+  // ---- Zone layer (built from fallback data immediately; replaced if API responds) ----
+  function buildZoneFeaturesFromFallback() {
+    return fallbackZones.map(function (z, i) {
+      var poly = new ol.geom.Polygon([z.coords.map(function (c) { return ol.proj.fromLonLat(c); })]);
+      var f = new ol.Feature({ geometry: poly, name: z.name, count: z.count, color: z.color });
+      f.setId("zone-" + i);
+      return f;
+    });
+  }
+
+  var zoneFeatures = buildZoneFeaturesFromFallback();
+  var zoneSource = new ol.source.Vector({ features: zoneFeatures });
+  var zoneLayer = new ol.layer.Vector({
+    source: zoneSource,
+    style: function (feature) {
+      var color = feature.get("color") || "#2e6f5e";
+      return new ol.style.Style({
+        fill: new ol.style.Fill({ color: toColorRgba(color, 0.16) }),
+        stroke: new ol.style.Stroke({ color: color, width: 2 }),
+        text: new ol.style.Text({
+          text: feature.get("name"),
+          font: "600 12px Sora, sans-serif",
+          fill: new ol.style.Fill({ color: "#17211f" }),
+          stroke: new ol.style.Stroke({ color: "#f7f8f6", width: 3 })
+        })
+      });
+    }
+  });
+
+  // ---- Driver layer ----
+  function buildDriverFeaturesFromFallback() {
+    return fallbackDrivers.map(function (d) {
+      return new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([d.lon, d.lat])),
+        name: d.name, status: d.status, zone: d.zone, kind: "driver"
+      });
+    });
+  }
+
+  var driverSource = new ol.source.Vector({ features: buildDriverFeaturesFromFallback() });
+  var driverLayer = new ol.layer.Vector({
+    source: driverSource,
+    style: function (feature) {
+      var ok = feature.get("status") === "ok";
+      var color = ok ? "#3f8f5c" : "#c97a2b";
+      return new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 6,
+          fill: new ol.style.Fill({ color: color }),
+          stroke: new ol.style.Stroke({ color: "#ffffff", width: 2 })
+        })
+      });
+    }
+  });
+
+  // ---- Stops layer ----
+  function buildStopFeaturesFromFallback() {
+    return fallbackStops.map(function (s) {
+      return new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([s.lon, s.lat])),
+        name: s.label, kind: "stop"
+      });
+    });
+  }
+
+  var STOP_STATUS_COLORS = { pending: "#c97a2b", delivered: "#3f8f5c", failed: "#b84a3e" };
+
+  var stopSource = new ol.source.Vector({ features: buildStopFeaturesFromFallback() });
+  var stopLayer = new ol.layer.Vector({
+    source: stopSource,
+    style: function (feature) {
+      var color = STOP_STATUS_COLORS[feature.get("status")] || "#2e6f5e";
+      return new ol.style.Style({
+        image: new ol.style.RegularShape({
+          points: 4,
+          radius: 6,
+          radius2: 0,
+          angle: Math.PI / 4,
+          fill: new ol.style.Fill({ color: color }),
+          stroke: new ol.style.Stroke({ color: "#ffffff", width: 1.5 })
+        })
+      });
+    },
+    visible: false
+  });
+  driverLayer.setVisible(true);
+
+  var baseLayer = new ol.layer.Tile({
+    source: new ol.source.XYZ({
+      url: "https://tile.openstreetmap.de/{z}/{x}/{y}.png",
+      attributions: '&copy; OpenStreetMap contributors',
+      crossOrigin: "anonymous"
+    })
+  });
+
+  var map = new ol.Map({
+    target: "map",
+    layers: [baseLayer, zoneLayer, driverLayer, stopLayer],
+    view: new ol.View({ center: center, zoom: 13.4 }),
+    controls: ol.control.defaults({ zoom: true, attribution: true, rotate: false })
+  });
+
+  // ---- Coordinate readout: live on hover, pinned on click ----
+  var coordBox = document.createElement("div");
+  coordBox.className = "map-legend";
+  coordBox.style.cssText = "bottom:auto;left:auto;top:14px;right:70px;min-width:190px;";
+  coordBox.innerHTML =
+    '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);">Cursor position</div>' +
+    '<div class="mono" id="hoverCoord" style="font-size:13px;">lon —, lat —</div>' +
+    '<div style="height:1px;background:var(--line);"></div>' +
+    '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);">Last click</div>' +
+    '<div class="mono" id="clickCoord" style="font-size:13px;">lon —, lat —</div>';
+  document.querySelector("main").appendChild(coordBox);
+  var hoverCoordEl = document.getElementById("hoverCoord");
+  var clickCoordEl = document.getElementById("clickCoord");
+
+  function formatLonLat(coord3857) {
+    var lonLat = ol.proj.toLonLat(coord3857);
+    return "lon " + lonLat[0].toFixed(5) + ", lat " + lonLat[1].toFixed(5);
+  }
+
+  map.on("pointermove", function (evt) {
+    if (evt.dragging) return;
+    hoverCoordEl.textContent = formatLonLat(evt.coordinate);
+  });
+
+  map.on("click", function (evt) {
+    clickCoordEl.textContent = formatLonLat(evt.coordinate);
+  });
+
+  // ---- Popup overlay ----
+  var popupEl = document.createElement("div");
+  popupEl.className = "ol-popup";
+  popupEl.style.display = "none";
+  document.querySelector("main").appendChild(popupEl);
+  var overlay = new ol.Overlay({ element: popupEl, positioning: "bottom-center" });
+  map.addOverlay(overlay);
+
+  map.on("pointermove", function (evt) {
+    var hit = map.forEachFeatureAtPixel(evt.pixel, function (f) { return f; });
+    if (hit) {
+      map.getTargetElement().style.cursor = "pointer";
+      var geom = hit.getGeometry();
+      var coord = geom.getType() === "Point" ? geom.getCoordinates() : evt.coordinate;
+      overlay.setPosition(coord);
+      if (hit.get("kind") === "driver") {
+        popupEl.innerHTML = '<div class="pop-title">' + hit.get("name") + '</div><div class="pop-line">' + hit.get("zone") + ' &middot; ' + (hit.get("status") === "ok" ? "on time" : "delayed") + '</div>';
+      } else if (hit.get("kind") === "stop") {
+        var stopStatus = hit.get("status") || "pending";
+        popupEl.innerHTML = '<div class="pop-title">' + hit.get("name") + '</div><div class="pop-line">' + stopStatus.charAt(0).toUpperCase() + stopStatus.slice(1) + (hit.get("driver_name") ? ' &middot; ' + hit.get("driver_name") : '') + '</div><div class="pop-line" style="margin-top:4px;font-style:italic;">Click to change status</div>';
+      } else {
+        popupEl.innerHTML = '<div class="pop-title">' + hit.get("name") + '</div><div class="pop-line">' + hit.get("count") + ' deliveries today</div>';
+      }
+      popupEl.style.display = "block";
+    } else {
+      map.getTargetElement().style.cursor = "";
+      popupEl.style.display = "none";
+    }
+  });
+
+  // ---- Dynamic sidebar: rendered from whatever is currently in zoneSource/driverSource ----
+  function flyToZoneFeature(feature) {
+    var extent = feature.getGeometry().getExtent();
+    map.getView().fit(extent, { padding: [60, 60, 60, 60], duration: 450, maxZoom: 15.5 });
+  }
+
+  function renderZoneList() {
+    var zoneListEl = document.getElementById("zoneList");
+    var features = zoneSource.getFeatures();
+    if (features.length === 0) {
+      zoneListEl.innerHTML = '<div class="empty-hint">No zones yet. Click "+ Draw zone" to add one.</div>';
+      return;
+    }
+    zoneListEl.innerHTML = "";
+    features.forEach(function (f) {
+      var row = document.createElement("div");
+      row.className = "zone-row";
+      row.tabIndex = 0;
+      var color = f.get("color") || "#2e6f5e";
+      var count = f.get("count") != null ? f.get("count") : 0;
+      row.innerHTML =
+        '<span class="zone-swatch" style="background:' + color + ';"></span>' +
+        '<div class="zone-info">' +
+          '<div class="zone-name">' + f.get("name") + '</div>' +
+          '<div class="zone-meta">' + (f.get("schedule") || "No schedule set") + '</div>' +
+        '</div>' +
+        '<div class="zone-count">' + count + '</div>';
+      function go() { flyToZoneFeature(f); }
+      row.addEventListener("click", go);
+      row.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      zoneListEl.appendChild(row);
+    });
+  }
+
+  function renderDriverList() {
+    var driverListEl = document.getElementById("driverList");
+    var features = driverSource.getFeatures();
+    if (features.length === 0) {
+      driverListEl.innerHTML = '<div class="empty-hint">No drivers yet. Click "+ Add driver" to add one.</div>';
+      return;
+    }
+    driverListEl.innerHTML = "";
+    features.forEach(function (f) {
+      var row = document.createElement("div");
+      row.className = "driver-row";
+      var statusClass = f.get("status") === "ok" ? "ok" : "warn";
+      row.innerHTML =
+        '<span class="driver-dot ' + statusClass + '"></span>' +
+        '<span class="driver-name">' + f.get("name") + (f.get("zone") ? ' &middot; ' + f.get("zone") : '') + '</span>';
+      driverListEl.appendChild(row);
+    });
+  }
+
+  // Populates the "starting zone" dropdown in the add-driver modal from current zones.
+  function populateDriverZoneOptions() {
+    var select = document.getElementById("driverZoneInput");
+    var features = zoneSource.getFeatures();
+    select.innerHTML = '<option value="">No zone</option>' +
+      features.map(function (f) { return '<option value="' + f.get("id") + '">' + f.get("name") + '</option>'; }).join('');
+  }
+
+  // ---- Toolbar toggles ----
+  var btnZones = document.getElementById("btnZones");
+  var btnDrivers = document.getElementById("btnDrivers");
+  var btnStops = document.getElementById("btnStops");
+
+  function toggle(btn, layer) {
+    btn.addEventListener("click", function () {
+      var next = !layer.getVisible();
+      layer.setVisible(next);
+      btn.classList.toggle("active", next);
+    });
+  }
+  toggle(btnZones, zoneLayer);
+  toggle(btnDrivers, driverLayer);
+  toggle(btnStops, stopLayer);
+
+  // ---- Load real data from the PHP/PostGIS API; keep fallback demo data if it's unreachable ----
+  function loadLive() {
+    var zonesReq = fetch(API_BASE + "zones.php").then(function (r) {
+      if (!r.ok) throw new Error("zones API error");
+      return r.json();
+    });
+    var driversReq = fetch(API_BASE + "drivers.php").then(function (r) {
+      if (!r.ok) throw new Error("drivers API error");
+      return r.json();
+    });
+    var stopsReq = fetch(API_BASE + "stops.php").then(function (r) {
+      if (!r.ok) throw new Error("stops API error");
+      return r.json();
+    });
+
+    Promise.all([zonesReq, driversReq, stopsReq]).then(function (results) {
+      var zonesGeoJSON = results[0], driversGeoJSON = results[1], stopsGeoJSON = results[2];
+
+      var zoneColors = { "Molino Core": "#2e6f5e", "Niog – Talaba": "#3f8f5c", "Zapote Edge": "#c97a2b", "Salinas Ext.": "#6b8f9c" };
+
+      var liveZoneFeatures = geojsonFmt.readFeatures(zonesGeoJSON);
+      liveZoneFeatures.forEach(function (f) {
+        f.set("count", f.get("stop_count"));
+        if (!f.get("color")) f.set("color", zoneColors[f.get("name")] || "#2e6f5e");
+      });
+      zoneSource.clear();
+      zoneSource.addFeatures(liveZoneFeatures);
+
+      var liveDriverFeatures = geojsonFmt.readFeatures(driversGeoJSON);
+      liveDriverFeatures.forEach(function (f) {
+        f.set("kind", "driver");
+        f.set("zone", f.get("zone_name"));
+      });
+      driverSource.clear();
+      driverSource.addFeatures(liveDriverFeatures);
+
+      var liveStopFeatures = geojsonFmt.readFeatures(stopsGeoJSON);
+      liveStopFeatures.forEach(function (f) { f.set("kind", "stop"); f.set("name", f.get("label")); });
+      stopSource.clear();
+      stopSource.addFeatures(liveStopFeatures);
+
+      setDataSource(true);
+      renderZoneList();
+      renderDriverList();
+      populateDriverZoneOptions();
+    }).catch(function (err) {
+      console.warn("Live PostGIS API unavailable, showing demo data:", err.message);
+      setDataSource(false);
+      renderZoneList();
+      renderDriverList();
+      populateDriverZoneOptions();
+    });
+  }
+
+  // ---- Poll driver positions only, so moving dots don't require a full page refresh ----
+  var DRIVER_POLL_MS = 4000;
+  function refreshDriversOnly() {
+    fetch(API_BASE + "drivers.php").then(function (r) {
+      if (!r.ok) throw new Error("drivers API error");
+      return r.json();
+    }).then(function (driversGeoJSON) {
+      var liveDriverFeatures = geojsonFmt.readFeatures(driversGeoJSON);
+      liveDriverFeatures.forEach(function (f) {
+        f.set("kind", "driver");
+        f.set("zone", f.get("zone_name"));
+      });
+      driverSource.clear();
+      driverSource.addFeatures(liveDriverFeatures);
+      setDataSource(true);
+      renderDriverList();
+    }).catch(function (err) {
+      console.warn("Driver refresh failed:", err.message);
+    });
+  }
+
+  setDataSource(false);
+  loadLive();
+  setInterval(refreshDriversOnly, DRIVER_POLL_MS);
+
+  // ---- Draw a new zone by clicking points on the map ----
+  var drawMode = false;
+  var drawPoints = []; // array of [lon, lat]
+  var drawSource = new ol.source.Vector();
+  var drawLayer = new ol.layer.Vector({
+    source: drawSource,
+    style: new ol.style.Style({
+      image: new ol.style.Circle({ radius: 5, fill: new ol.style.Fill({ color: "#2e6f5e" }), stroke: new ol.style.Stroke({ color: "#fff", width: 1.5 }) }),
+      stroke: new ol.style.Stroke({ color: "#2e6f5e", width: 2, lineDash: [6, 6] }),
+      fill: new ol.style.Fill({ color: "rgba(46,111,94,0.12)" })
+    })
+  });
+  map.addLayer(drawLayer);
+
+  var drawBanner = document.getElementById("drawBanner");
+  var drawBannerText = document.getElementById("drawBannerText");
+
+  function updateDrawVisual() {
+    drawSource.clear();
+    drawPoints.forEach(function (p) {
+      drawSource.addFeature(new ol.Feature({ geometry: new ol.geom.Point(ol.proj.fromLonLat(p)) }));
+    });
+    if (drawPoints.length >= 2) {
+      var ring = drawPoints.concat([drawPoints[0]]).map(function (p) { return ol.proj.fromLonLat(p); });
+      drawSource.addFeature(new ol.Feature({ geometry: new ol.geom.Polygon([ring]) }));
+    }
+    drawBannerText.textContent = "Click the map to place points · " + drawPoints.length + " placed";
+  }
+
+  function startDrawMode() {
+    drawMode = true;
+    drawPoints = [];
+    updateDrawVisual();
+    drawBanner.classList.add("show");
+  }
+
+  function stopDrawMode() {
+    drawMode = false;
+    drawPoints = [];
+    drawSource.clear();
+    drawBanner.classList.remove("show");
+  }
+
+  map.on("click", function (evt) {
+    if (!drawMode) return;
+    var lonLat = ol.proj.toLonLat(evt.coordinate);
+    drawPoints.push([lonLat[0], lonLat[1]]);
+    updateDrawVisual();
+  });
+
+  document.getElementById("btnDrawZone").addEventListener("click", startDrawMode);
+  document.getElementById("drawCancelBtn").addEventListener("click", stopDrawMode);
+  document.getElementById("drawFinishBtn").addEventListener("click", function () {
+    if (drawPoints.length < 3) {
+      alert("Place at least 3 points to make a zone shape.");
+      return;
+    }
+    document.getElementById("zoneDetailsModal").classList.add("show");
+  });
+
+  // ---- Zone details modal (name/schedule/color) -> saves the drawn shape ----
+  var zoneModal = document.getElementById("zoneDetailsModal");
+  var zoneModalError = document.getElementById("zoneModalError");
+
+  document.getElementById("zoneModalCancel").addEventListener("click", function () {
+    zoneModal.classList.remove("show");
+  });
+
+  document.getElementById("zoneModalSave").addEventListener("click", function () {
+    var name = document.getElementById("zoneNameInput").value.trim();
+    var schedule = document.getElementById("zoneScheduleInput").value.trim();
+    var color = document.getElementById("zoneColorInput").value;
+    zoneModalError.classList.remove("show");
+
+    if (!name) {
+      zoneModalError.textContent = "Zone name is required.";
+      zoneModalError.classList.add("show");
+      return;
+    }
+
+    fetch(API_BASE + "zones.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, schedule: schedule, color: color, coords: drawPoints })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.data.error || "Could not save zone");
+      zoneModal.classList.remove("show");
+      document.getElementById("zoneNameInput").value = "";
+      document.getElementById("zoneScheduleInput").value = "";
+      stopDrawMode();
+      loadLive();
+    }).catch(function (err) {
+      zoneModalError.textContent = err.message;
+      zoneModalError.classList.add("show");
+    });
+  });
+
+  // ---- Add driver modal ----
+  var driverModal = document.getElementById("driverModal");
+  var driverModalError = document.getElementById("driverModalError");
+
+  document.getElementById("btnAddDriver").addEventListener("click", function () {
+    populateDriverZoneOptions();
+    document.getElementById("driverNameInput").value = "";
+    driverModalError.classList.remove("show");
+    driverModal.classList.add("show");
+  });
+
+  document.getElementById("driverModalCancel").addEventListener("click", function () {
+    driverModal.classList.remove("show");
+  });
+
+  document.getElementById("driverModalSave").addEventListener("click", function () {
+    var name = document.getElementById("driverNameInput").value.trim();
+    var zoneId = document.getElementById("driverZoneInput").value;
+    driverModalError.classList.remove("show");
+
+    if (!name) {
+      driverModalError.textContent = "Driver name is required.";
+      driverModalError.classList.add("show");
+      return;
+    }
+
+    // New drivers start at the center of their chosen zone, or the map's current center if none chosen.
+    var startLonLat;
+    if (zoneId) {
+      var zoneFeature = zoneSource.getFeatures().filter(function (f) { return String(f.get("id")) === String(zoneId); })[0];
+      startLonLat = zoneFeature ? ol.proj.toLonLat(ol.extent.getCenter(zoneFeature.getGeometry().getExtent())) : ol.proj.toLonLat(center);
+    } else {
+      startLonLat = ol.proj.toLonLat(map.getView().getCenter());
+    }
+
+    fetch(API_BASE + "drivers.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, lon: startLonLat[0], lat: startLonLat[1], zone_id: zoneId || null, status: "ok" })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.data.error || "Could not add driver");
+      driverModal.classList.remove("show");
+      loadLive();
+    }).catch(function (err) {
+      driverModalError.textContent = err.message;
+      driverModalError.classList.add("show");
+    });
+  });
+
+  // ---- Add a stop by clicking one point on the map ----
+  var placingStop = false;
+  var pendingStopLonLat = null;
+  var stopPlaceBanner = document.getElementById("stopPlaceBanner");
+  var stopModal = document.getElementById("stopModal");
+  var stopModalError = document.getElementById("stopModalError");
+
+  function populateStopZoneOptions() {
+    var select = document.getElementById("stopZoneInput");
+    var features = zoneSource.getFeatures();
+    select.innerHTML = '<option value="">No zone</option>' +
+      features.map(function (f) { return '<option value="' + f.get("id") + '">' + f.get("name") + '</option>'; }).join('');
+  }
+
+  document.getElementById("btnAddStop").addEventListener("click", function () {
+    placingStop = true;
+    stopPlaceBanner.classList.add("show");
+    stopLayer.setVisible(true);
+    document.getElementById("btnStops").classList.add("active");
+  });
+
+  document.getElementById("stopPlaceCancelBtn").addEventListener("click", function () {
+    placingStop = false;
+    stopPlaceBanner.classList.remove("show");
+  });
+
+  map.on("click", function (evt) {
+    if (!placingStop) return;
+    pendingStopLonLat = ol.proj.toLonLat(evt.coordinate);
+    placingStop = false;
+    stopPlaceBanner.classList.remove("show");
+    populateStopZoneOptions();
+    document.getElementById("stopLabelInput").value = "";
+    stopModalError.classList.remove("show");
+    stopModal.classList.add("show");
+  });
+
+  document.getElementById("stopModalCancel").addEventListener("click", function () {
+    stopModal.classList.remove("show");
+  });
+
+  document.getElementById("stopModalSave").addEventListener("click", function () {
+    var label = document.getElementById("stopLabelInput").value.trim();
+    var zoneId = document.getElementById("stopZoneInput").value;
+    stopModalError.classList.remove("show");
+
+    if (!label) {
+      stopModalError.textContent = "Stop label is required.";
+      stopModalError.classList.add("show");
+      return;
+    }
+
+    fetch(API_BASE + "stops.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: label, lon: pendingStopLonLat[0], lat: pendingStopLonLat[1], zone_id: zoneId || null })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.data.error || "Could not save stop");
+      stopModal.classList.remove("show");
+      loadLive();
+    }).catch(function (err) {
+      stopModalError.textContent = err.message;
+      stopModalError.classList.add("show");
+    });
+  });
+
+  // ---- Click an existing stop marker to update its delivery status ----
+  var stopStatusModal = document.getElementById("stopStatusModal");
+  var stopStatusModalError = document.getElementById("stopStatusModalError");
+  var activeStopId = null;
+
+  map.on("click", function (evt) {
+    if (placingStop) return;
+    var hit = map.forEachFeatureAtPixel(evt.pixel, function (f) { return f.get("kind") === "stop" ? f : undefined; });
+    if (!hit) return;
+    activeStopId = hit.get("id");
+    document.getElementById("stopStatusModalTitle").textContent = "Update: " + hit.get("name");
+    document.getElementById("stopStatusInput").value = hit.get("status") || "pending";
+    stopStatusModalError.classList.remove("show");
+    stopStatusModal.classList.add("show");
+  });
+
+  document.getElementById("stopStatusModalCancel").addEventListener("click", function () {
+    stopStatusModal.classList.remove("show");
+  });
+
+  document.getElementById("stopStatusModalSave").addEventListener("click", function () {
+    var status = document.getElementById("stopStatusInput").value;
+    fetch(API_BASE + "stops.php?id=" + activeStopId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: status })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+    }).then(function (result) {
+      if (!result.ok) throw new Error(result.data.error || "Could not update stop");
+      stopStatusModal.classList.remove("show");
+      loadLive();
+    }).catch(function (err) {
+      stopStatusModalError.textContent = err.message;
+      stopStatusModalError.classList.add("show");
+    });
+  });
+})();
+</script>
+</body>
+</html>

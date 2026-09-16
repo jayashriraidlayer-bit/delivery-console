@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Driver Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #f7f8f6;
+    --ink: #17211f;
+    --ink-soft: #4a5551;
+    --line: rgba(23, 33, 31, 0.12);
+    --panel: #ffffff;
+    --accent: #2e6f5e;
+    --accent-soft: #dcebe5;
+    --ok: #3f8f5c;
+    --warn: #c97a2b;
+    --alert: #b84a3e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12181a; --ink: #eef2f0; --ink-soft: #a4b0ac; --line: rgba(238, 242, 240, 0.12);
+      --panel: #182120; --accent: #57b596; --accent-soft: rgba(87, 181, 150, 0.16);
+      --ok: #57b596; --warn: #e0a058; --alert: #e0776a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12181a; --ink: #eef2f0; --ink-soft: #a4b0ac; --line: rgba(238, 242, 240, 0.12);
+    --panel: #182120; --accent: #57b596; --accent-soft: rgba(87, 181, 150, 0.16);
+    --ok: #57b596; --warn: #e0a058; --alert: #e0776a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+    font-family: "Sora", system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px; padding-block: 24px;
+  }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .card {
+    width: 100%; max-width: 420px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 18px;
+  }
+  h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  .sub { font-size: 13px; color: var(--ink-soft); margin: 2px 0 0; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 600; }
+  select, input[type="text"] {
+    font: inherit; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink); font-size: 14px;
+  }
+  .status-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-soft); flex-shrink: 0; }
+  .status-dot.tracking { background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
+  .status-dot.error { background: var(--alert); }
+  @media (prefers-reduced-motion: reduce) { .status-dot.tracking { animation: none; } }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); }
+    70% { box-shadow: 0 0 0 7px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .status-text { font-size: 13px; font-weight: 600; }
+  .status-sub { font-size: 11.5px; color: var(--ink-soft); font-family: "JetBrains Mono", monospace; }
+  button {
+    font: inherit; font-weight: 700; font-size: 14px; padding: 13px; border-radius: 10px;
+    border: none; cursor: pointer; background: var(--accent); color: white;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.stop { background: var(--alert); }
+  .coords {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .coord-tile { background: var(--paper); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; }
+  .coord-label { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+  .coord-value { font-family: "JetBrains Mono", monospace; font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 3px; }
+  .log { font-size: 11px; color: var(--ink-soft); font-family: "JetBrains Mono", monospace; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div>
+    <h1>Driver Tracker</h1>
+    <p class="sub">Keep this page open while you're on your route &mdash; your location updates automatically.</p>
+  </div>
+
+  <div class="field">
+    <label for="driverSelect">You are</label>
+    <select id="driverSelect">
+      <option value="1">R. Manalo</option>
+      <option value="2">J. Dizon</option>
+      <option value="3">C. Reyes</option>
+      <option value="4">M. Santos</option>
+      <option value="5">A. Cruz</option>
+      <option value="6">L. Bautista</option>
+      <option value="7">E. Torres</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="statusSelect">Delivery status</label>
+    <select id="statusSelect">
+      <option value="ok">On time</option>
+      <option value="warn">Delayed</option>
+    </select>
+  </div>
+
+  <div class="status-row">
+    <span class="status-dot" id="statusDot"></span>
+    <div>
+      <div class="status-text" id="statusText">Not tracking</div>
+      <div class="status-sub" id="statusSub">Press Start to share your location</div>
+    </div>
+  </div>
+
+  <div class="coords">
+    <div class="coord-tile">
+      <div class="coord-label">Longitude</div>
+      <div class="coord-value mono" id="lonValue">&mdash;</div>
+    </div>
+    <div class="coord-tile">
+      <div class="coord-label">Latitude</div>
+      <div class="coord-value mono" id="latValue">&mdash;</div>
+    </div>
+  </div>
+
+  <button id="toggleBtn">Start sharing location</button>
+
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div style="flex:1; height:1px; background:var(--line);"></div>
+    <span style="font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em;">or</span>
+    <div style="flex:1; height:1px; background:var(--line);"></div>
+  </div>
+
+  <div class="field">
+    <label for="routeSelect">Simulate a Bacoor route</label>
+    <select id="routeSelect">
+      <option value="molino-niog">Molino Core → Niog-Talaba</option>
+      <option value="niog-zapote">Niog-Talaba → Zapote Edge</option>
+      <option value="salinas-molino">Salinas Ext. → Molino Core</option>
+    </select>
+  </div>
+  <button id="simBtn" style="background: var(--ink-soft);">Simulate driving route</button>
+
+  <div class="log" id="logLine"></div>
+</div>
+
+<script>
+(function () {
+  var API_URL = "api/drivers.php";
+  var watchId = null;
+  var sendTimer = null;
+  var lastPosition = null;
+
+  var driverSelect = document.getElementById("driverSelect");
+  var statusSelect = document.getElementById("statusSelect");
+  var statusDot = document.getElementById("statusDot");
+  var statusText = document.getElementById("statusText");
+  var statusSub = document.getElementById("statusSub");
+  var lonValue = document.getElementById("lonValue");
+  var latValue = document.getElementById("latValue");
+  var toggleBtn = document.getElementById("toggleBtn");
+  var logLine = document.getElementById("logLine");
+
+  function setTracking(on) {
+    statusDot.className = "status-dot" + (on ? " tracking" : "");
+    statusText.textContent = on ? "Sharing location" : "Not tracking";
+    statusSub.textContent = on ? "Updating every 8 seconds" : "Press Start to share your location";
+    toggleBtn.textContent = on ? "Stop sharing" : "Start sharing location";
+    toggleBtn.classList.toggle("stop", on);
+    driverSelect.disabled = on;
+  }
+
+  function setError(message) {
+    statusDot.className = "status-dot error";
+    statusText.textContent = "Location error";
+    statusSub.textContent = message;
+  }
+
+  function sendPosition() {
+    if (!lastPosition) return;
+    var driverId = driverSelect.value;
+    var status = statusSelect.value;
+    fetch(API_URL + "?id=" + driverId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lon: lastPosition.lon, lat: lastPosition.lat, status: status })
+    }).then(function (r) {
+      if (!r.ok) throw new Error("server rejected update");
+      return r.json();
+    }).then(function () {
+      logLine.textContent = "Last sent " + new Date().toLocaleTimeString();
+    }).catch(function (err) {
+      logLine.textContent = "Send failed: " + err.message;
+    });
+  }
+
+  function onPosition(pos) {
+    lastPosition = { lon: pos.coords.longitude, lat: pos.coords.latitude };
+    lonValue.textContent = lastPosition.lon.toFixed(5);
+    latValue.textContent = lastPosition.lat.toFixed(5);
+  }
+
+  function onPositionError(err) {
+    setError(err.message || "Could not read GPS");
+  }
+
+  function start() {
+    if (!navigator.geolocation) {
+      setError("This device does not support GPS in the browser");
+      return;
+    }
+    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000
+    });
+    sendTimer = setInterval(sendPosition, 8000);
+    setTracking(true);
+  }
+
+  function stop() {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    if (sendTimer !== null) clearInterval(sendTimer);
+    watchId = null;
+    sendTimer = null;
+    setTracking(false);
+    logLine.textContent = "";
+  }
+
+  toggleBtn.addEventListener("click", function () {
+    if (watchId === null) start(); else stop();
+  });
+
+  // ---- Route simulator: fakes a moving GPS path through real Bacoor coordinates ----
+  var ROUTES = {
+    "molino-niog":  { from: [120.9390, 14.4610], to: [120.9500, 14.4560] },
+    "niog-zapote":  { from: [120.9500, 14.4550], to: [120.9615, 14.4600] },
+    "salinas-molino": { from: [120.9290, 14.4600], to: [120.9450, 14.4630] }
+  };
+  var SIM_STEPS = 20;
+  var SIM_INTERVAL_MS = 1500;
+  var simTimer = null;
+  var simStep = 0;
+
+  var routeSelect = document.getElementById("routeSelect");
+  var simBtn = document.getElementById("simBtn");
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function simTick() {
+    var route = ROUTES[routeSelect.value];
+    var t = simStep / SIM_STEPS;
+    var lon = lerp(route.from[0], route.to[0], t);
+    var lat = lerp(route.from[1], route.to[1], t);
+
+    lastPosition = { lon: lon, lat: lat };
+    lonValue.textContent = lon.toFixed(5);
+    latValue.textContent = lat.toFixed(5);
+    sendPosition();
+
+    simStep++;
+    if (simStep > SIM_STEPS) {
+      stopSim();
+      logLine.textContent = "Simulated route finished";
+    }
+  }
+
+  function startSim() {
+    stop(); // real GPS tracking and simulation are mutually exclusive
+    simStep = 0;
+    driverSelect.disabled = true;
+    routeSelect.disabled = true;
+    simBtn.textContent = "Stop simulation";
+    statusDot.className = "status-dot tracking";
+    statusText.textContent = "Simulating route";
+    statusSub.textContent = "Fake GPS path through Bacoor, updating every 1.5s";
+    simTimer = setInterval(simTick, SIM_INTERVAL_MS);
+    simTick();
+  }
+
+  function stopSim() {
+    if (simTimer !== null) clearInterval(simTimer);
+    simTimer = null;
+    driverSelect.disabled = false;
+    routeSelect.disabled = false;
+    simBtn.textContent = "Simulate driving route";
+    setTracking(false);
+  }
+
+  simBtn.addEventListener("click", function () {
+    if (simTimer === null) startSim(); else stopSim();
+  });
+})();
+</script>
+</body>
+</html>

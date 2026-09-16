@@ -1,0 +1,9 @@
+.env
+server.log
+
+# One-time PostGIS installer artifacts — not project code, ~400MB, kept
+# locally only in case the system-wide PostGIS install ever needs redoing.
+db/postgis-bundle.zip
+db/postgis_extract/
+db/postgis_listing.html
+db/pg_hba.conf.backup
