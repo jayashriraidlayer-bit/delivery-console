@@ -45,7 +45,7 @@ structured record of zones or delivery history. This tool gives the owner:
             │ GET (fetch)                          │ PATCH (fetch)
             ▼                                      ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        PHP API  (D:\PHP\api\)                    │
+│                        PHP API  (api/)                            │
 │                                                                    │
 │  zones.php     GET  → all zones for a company, as GeoJSON         │
 │  drivers.php   GET  → all drivers for a company, as GeoJSON       │
@@ -112,17 +112,24 @@ application code.
 ## File map
 
 ```
-D:\PHP\
+D:\PHP_NEW\delivery_console\
 ├── delivery-ops-map.html   Owner's dashboard (OpenLayers map)
 ├── driver.html             Driver's location-sharing page + route simulator
+├── login.html              Owner sign-in
 ├── api\
-│   ├── db.php              Shared PostgreSQL connection (holds local dev password)
-│   ├── zones.php           GET zones as GeoJSON
-│   ├── drivers.php         GET drivers as GeoJSON; PATCH to update one driver's position
-│   ├── stops.php           GET delivery stops as GeoJSON
+│   ├── db.php              PostgreSQL connection — reads DB_* from environment/.env, never hardcoded
+│   ├── load_env.php        Loads .env into getenv() for local dev
+│   ├── auth.php            Session helpers (require_company_id)
+│   ├── login.php / logout.php / me.php
+│   ├── zones.php           GET zones as GeoJSON; POST to add one (draw-on-map)
+│   ├── drivers.php         GET drivers as GeoJSON (login required); PATCH to update position (open, see limitations); POST to add one
+│   ├── stops.php           GET delivery stops as GeoJSON; POST to add one; PATCH to update status
 │   └── locate.php          GET → which zone contains a given point
 ├── db\
-│   └── schema.sql          Full table definitions + sample Bacoor data (re-runnable)
+│   ├── schema.sql          Full table definitions + sample Bacoor data (re-runnable)
+│   └── dumps\              pg_dump export + README for one-command team setup
+├── Dockerfile / docker-entrypoint.sh   Ready for a Docker-based host (Railway, etc.)
+├── .env.example            Template — copy to .env and fill in a real local DB password
 └── docs\
     └── project-overview.md This file
 ```
@@ -159,9 +166,11 @@ D:\PHP\
   deliberately left open for the prototype; before real deployment, each
   driver needs a private access token (e.g. `driver.html?token=...`)
   checked against a stored token instead of a raw id.
-- **Password in plaintext** — `api/db.php` holds the local PostgreSQL
-  password directly in the file. Fine for local development only; never
-  commit this file to version control or deploy it as-is.
+- **Local `.env` file holds the real dev password.** `api/db.php` reads
+  `DB_PASS` from the environment (via `.env` locally, git-ignored) rather
+  than hardcoding it — this is correct for version control, but the
+  password itself is still a plain local-dev credential, not a secret
+  worth reusing anywhere real.
 - **Only one company/user exists** — the multi-tenant `company_id`
   scoping is implemented (every query filters by it), but it has not been
   tested against a second company's data to confirm isolation actually
