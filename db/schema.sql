@@ -4,6 +4,7 @@
 --   psql -d hyra_delivery -f schema.sql
 
 CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Companies (multi-tenant root, matches Hyphen OI Pro's companyId pattern)
 CREATE TABLE companies (
@@ -37,13 +38,14 @@ CREATE INDEX idx_zones_company ON zones (company_id);
 
 -- Drivers: live point location per company
 CREATE TABLE drivers (
-    id          SERIAL PRIMARY KEY,
-    company_id  INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    name        TEXT NOT NULL,
-    status      TEXT NOT NULL DEFAULT 'ok' CHECK (status IN ('ok', 'warn')),
-    zone_id     INTEGER REFERENCES zones(id) ON DELETE SET NULL,
-    geom        GEOMETRY(POINT, 4326) NOT NULL,
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id            SERIAL PRIMARY KEY,
+    company_id    INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'ok' CHECK (status IN ('ok', 'warn')),
+    zone_id       INTEGER REFERENCES zones(id) ON DELETE SET NULL,
+    access_token  TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+    geom          GEOMETRY(POINT, 4326) NOT NULL,
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_drivers_geom ON drivers USING GIST (geom);
 CREATE INDEX idx_drivers_company ON drivers (company_id);

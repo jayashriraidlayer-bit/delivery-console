@@ -46,7 +46,7 @@
   .sub { font-size: 13px; color: var(--ink-soft); margin: 2px 0 0; }
   .field { display: flex; flex-direction: column; gap: 6px; }
   label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 600; }
-  select, input[type="text"] {
+  select {
     font: inherit; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line);
     background: var(--paper); color: var(--ink); font-size: 14px;
   }
@@ -75,27 +75,32 @@
   .coord-label { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
   .coord-value { font-family: "JetBrains Mono", monospace; font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 3px; }
   .log { font-size: 11px; color: var(--ink-soft); font-family: "JetBrains Mono", monospace; text-align: center; }
+  .driver-name { font-size: 15px; font-weight: 700; }
+  .error-card { text-align: center; color: var(--alert); font-size: 14px; padding: 20px; }
 </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="loadingCard">
+  <div class="sub">Loading&hellip;</div>
+</div>
+
+<div class="card" id="errorCard" style="display:none;">
+  <div class="error-card">
+    This link isn't valid. Ask your dispatcher for your personal tracking
+    link (it looks like <span class="mono">driver.html?token=&hellip;</span>).
+  </div>
+</div>
+
+<div class="card" id="mainCard" style="display:none;">
   <div>
     <h1>Driver Tracker</h1>
     <p class="sub">Keep this page open while you're on your route &mdash; your location updates automatically.</p>
   </div>
 
   <div class="field">
-    <label for="driverSelect">You are</label>
-    <select id="driverSelect">
-      <option value="1">R. Manalo</option>
-      <option value="2">J. Dizon</option>
-      <option value="3">C. Reyes</option>
-      <option value="4">M. Santos</option>
-      <option value="5">A. Cruz</option>
-      <option value="6">L. Bautista</option>
-      <option value="7">E. Torres</option>
-    </select>
+    <label>You are</label>
+    <div class="driver-name" id="driverNameDisplay">&mdash;</div>
   </div>
 
   <div class="field">
@@ -149,11 +154,23 @@
 <script>
 (function () {
   var API_URL = "api/drivers.php";
+
+  function getToken() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get("token");
+  }
+  var token = getToken();
+
+  if (!token) {
+    document.getElementById("loadingCard").style.display = "none";
+    document.getElementById("errorCard").style.display = "flex";
+    return;
+  }
+
   var watchId = null;
   var sendTimer = null;
   var lastPosition = null;
 
-  var driverSelect = document.getElementById("driverSelect");
   var statusSelect = document.getElementById("statusSelect");
   var statusDot = document.getElementById("statusDot");
   var statusText = document.getElementById("statusText");
@@ -169,7 +186,6 @@
     statusSub.textContent = on ? "Updating every 8 seconds" : "Press Start to share your location";
     toggleBtn.textContent = on ? "Stop sharing" : "Start sharing location";
     toggleBtn.classList.toggle("stop", on);
-    driverSelect.disabled = on;
   }
 
   function setError(message) {
@@ -180,9 +196,8 @@
 
   function sendPosition() {
     if (!lastPosition) return;
-    var driverId = driverSelect.value;
     var status = statusSelect.value;
-    fetch(API_URL + "?id=" + driverId, {
+    fetch(API_URL + "?token=" + encodeURIComponent(token), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lon: lastPosition.lon, lat: lastPosition.lat, status: status })
@@ -270,7 +285,6 @@
   function startSim() {
     stop(); // real GPS tracking and simulation are mutually exclusive
     simStep = 0;
-    driverSelect.disabled = true;
     routeSelect.disabled = true;
     simBtn.textContent = "Stop simulation";
     statusDot.className = "status-dot tracking";
@@ -283,7 +297,6 @@
   function stopSim() {
     if (simTimer !== null) clearInterval(simTimer);
     simTimer = null;
-    driverSelect.disabled = false;
     routeSelect.disabled = false;
     simBtn.textContent = "Simulate driving route";
     setTracking(false);
@@ -291,6 +304,24 @@
 
   simBtn.addEventListener("click", function () {
     if (simTimer === null) startSim(); else stopSim();
+  });
+
+  // ---- Resolve the driver's own name for display via a small public
+  // endpoint that only ever returns a name for a valid token — nothing
+  // else about the company, zones, or other drivers. ----
+  fetch("api/driver_whoami.php?token=" + encodeURIComponent(token)).then(function (r) {
+    return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+  }).then(function (result) {
+    document.getElementById("loadingCard").style.display = "none";
+    if (!result.ok) {
+      document.getElementById("errorCard").style.display = "flex";
+      return;
+    }
+    document.getElementById("mainCard").style.display = "flex";
+    document.getElementById("driverNameDisplay").textContent = result.data.name;
+  }).catch(function () {
+    document.getElementById("loadingCard").style.display = "none";
+    document.getElementById("errorCard").style.display = "flex";
   });
 })();
 </script>

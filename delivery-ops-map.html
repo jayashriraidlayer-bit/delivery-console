@@ -323,6 +323,22 @@
     font-weight: 500;
     flex: 1;
   }
+  .copy-link-btn {
+    font-family: "Sora", sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 3px 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .copy-link-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
   .driver-eta {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
@@ -872,10 +888,25 @@
       var row = document.createElement("div");
       row.className = "driver-row";
       var statusClass = f.get("status") === "ok" ? "ok" : "warn";
+      var token = f.get("access_token");
       row.innerHTML =
         '<span class="driver-dot ' + statusClass + '"></span>' +
-        '<span class="driver-name">' + f.get("name") + (f.get("zone") ? ' &middot; ' + f.get("zone") : '') + '</span>';
+        '<span class="driver-name">' + f.get("name") + (f.get("zone") ? ' &middot; ' + f.get("zone") : '') + '</span>' +
+        (token ? '<button class="copy-link-btn" data-token="' + token + '" title="Copy this driver\'s tracking link">Copy link</button>' : '');
       driverListEl.appendChild(row);
+    });
+
+    driverListEl.querySelectorAll(".copy-link-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var url = window.location.origin + window.location.pathname.replace(/[^/]*$/, "") + "driver.html?token=" + btn.getAttribute("data-token");
+        navigator.clipboard.writeText(url).then(function () {
+          var original = btn.textContent;
+          btn.textContent = "Copied ✓";
+          setTimeout(function () { btn.textContent = original; }, 1500);
+        }).catch(function () {
+          prompt("Copy this driver's tracking link:", url);
+        });
+      });
     });
   }
 

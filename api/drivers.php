@@ -10,7 +10,7 @@ try {
         // GET /api/drivers.php  (dashboard call — requires the owner's session)
         $companyId = require_company_id();
         $stmt = $pdo->prepare(
-            "SELECT d.id, d.name, d.status, z.name AS zone_name, ST_AsGeoJSON(d.geom) AS geojson
+            "SELECT d.id, d.name, d.status, d.access_token, z.name AS zone_name, ST_AsGeoJSON(d.geom) AS geojson
              FROM drivers d
              LEFT JOIN zones z ON z.id = d.zone_id
              WHERE d.company_id = :company_id
@@ -28,6 +28,7 @@ try {
                     'name' => $row['name'],
                     'status' => $row['status'],
                     'zone_name' => $row['zone_name'],
+                    'access_token' => $row['access_token'],
                 ],
             ];
         }, $rows);
@@ -62,7 +63,7 @@ try {
         $stmt = $pdo->prepare(
             "INSERT INTO drivers (company_id, name, status, zone_id, geom)
              VALUES (:company_id, :name, :status, :zone_id, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326))
-             RETURNING id"
+             RETURNING id, access_token"
         );
         $stmt->execute([
             'company_id' => $companyId,
@@ -72,21 +73,23 @@ try {
             'lon' => $lon,
             'lat' => $lat,
         ]);
-        $id = $stmt->fetchColumn();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        json_response(['id' => (int)$id], 201);
+        json_response(['id' => (int)$row['id'], 'access_token' => $row['access_token']], 201);
     }
 
     if ($method === 'PATCH') {
-        // PATCH /api/drivers.php?id=3  body: {"lon": 120.96, "lat": 14.46, "status": "ok"}
-        // Intentionally left without session auth: called by a driver's phone
-        // (driver.html), not the owner's dashboard. Before real deployment this
-        // needs a per-driver access token instead of a bare numeric id.
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        // PATCH /api/drivers.php?token=<access_token>  body: {"lon": 120.96, "lat": 14.46, "status": "ok"}
+        // Called by a driver's own phone (driver.html), not the owner's
+        // dashboard — so it can't use the owner's session. Instead, each
+        // driver has a private, unguessable access_token (see schema.sql);
+        // the token itself both identifies and authorizes which driver's
+        // row this call may update, replacing the old open numeric ?id=.
+        $token = $_GET['token'] ?? '';
         $body = json_decode(file_get_contents('php://input'), true) ?: [];
 
-        if (!$id || !isset($body['lon'], $body['lat'])) {
-            json_response(['error' => 'id, lon and lat are required'], 400);
+        if ($token === '' || !isset($body['lon'], $body['lat'])) {
+            json_response(['error' => 'token, lon and lat are required'], 400);
         }
 
         $stmt = $pdo->prepare(
@@ -94,21 +97,21 @@ try {
              SET geom = ST_SetSRID(ST_MakePoint(:lon, :lat), 4326),
                  status = COALESCE(:status, status),
                  updated_at = now()
-             WHERE id = :id
+             WHERE access_token = :token
              RETURNING id"
         );
         $stmt->execute([
             'lon' => $body['lon'],
             'lat' => $body['lat'],
             'status' => $body['status'] ?? null,
-            'id' => $id,
+            'token' => $token,
         ]);
 
         if ($stmt->rowCount() === 0) {
-            json_response(['error' => 'driver not found'], 404);
+            json_response(['error' => 'invalid token'], 404);
         }
 
-        json_response(['updated' => $id]);
+        json_response(['updated' => true]);
     }
 
     json_response(['error' => 'method not allowed'], 405);
